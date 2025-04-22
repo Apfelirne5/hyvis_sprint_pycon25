@@ -396,3 +396,61 @@ def numeric_hessian(
             )
 
     return Hessian(matrix=H, func=func, subspace=subspace, epsilon=epsilon)
+
+
+class GaussianSampler:
+    """
+    A sampler that generates points from a multivariate Gaussian distribution.
+    Allows for variance control in arbitrary directions.
+    """
+
+    def __init__(self, mean: np.ndarray, cov: Optional[np.ndarray] = None):
+        self.mean = mean.reshape(1, -1)
+        self.dim = self.mean.shape[1]
+        self.cov = cov if cov is not None else np.eye(self.dim)
+
+    def sample(self, num_samples: int = 100) -> np.ndarray:
+        """
+        Sample from the current Gaussian distribution.
+
+        Args:
+            num_samples (int): Number of samples to generate.
+
+        Returns:
+            np.ndarray: Sampled points, shape (num_samples, dim)
+        """
+        return np.random.multivariate_normal(
+            mean=self.mean.flatten(), cov=self.cov, size=num_samples
+        )
+
+    def modulate_variance(self, direction: np.ndarray, scale: float):
+        """
+        Modify variance along a specific direction.
+
+        Args:
+            direction (np.ndarray): A direction vector (1D array).
+            scale (float): Scaling factor for variance in this direction.
+        """
+        print("Original direction vector:", direction)
+
+        norm = np.linalg.norm(direction)
+        print("Norm of direction vector:", norm)
+
+        direction = direction / norm  # normalize
+        print("Normalized direction vector:", direction)
+
+        outer_product = np.outer(direction, direction)
+        print("Outer product of direction vector with itself:")
+        print(outer_product)
+
+        scaled_outer = scale * outer_product
+        print(f"Scaled outer product (scale = {scale}):")
+        print(scaled_outer)
+
+        print("Original covariance matrix:")
+        print(self.cov)
+
+        self.cov += scaled_outer
+
+        print("Updated covariance matrix:")
+        print(self.cov)
